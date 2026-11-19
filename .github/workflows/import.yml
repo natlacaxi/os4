@@ -1,0 +1,25 @@
+name: Importer le zip
+on:
+  push:
+    paths: ['TALCO-OS3.zip']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decompresser et commiter
+        run: |
+          [ -f TALCO-OS3.zip ] || { echo "pas de zip"; exit 0; }
+          unzip -q TALCO-OS3.zip -x 'TALCO-OS3/.github/*'
+          unzip -q -j TALCO-OS3.zip 'TALCO-OS3/.github/workflows/ci.yml' -d /tmp/ci
+          cp /tmp/ci/ci.yml CI_WORKFLOW.yml
+          cp -a TALCO-OS3/. .
+          rm -rf TALCO-OS3 TALCO-OS3.zip
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "Import TALCO-OS3 0.2.0"
+          git push
