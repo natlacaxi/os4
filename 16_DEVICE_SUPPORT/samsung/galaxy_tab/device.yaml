@@ -1,0 +1,9 @@
+vendor: samsung
+family: galaxy_tab
+arch: aarch64
+status: planned
+kernel_config: 01_KERNEL/configuration/talco_defconfig
+drivers: [display, touchscreen, wifi, bluetooth, modem, audio, camera, gps, sensors, usb, storage, power]
+form_factor: tablet
+dpi_typical: 240
+launcher_layout: tablet

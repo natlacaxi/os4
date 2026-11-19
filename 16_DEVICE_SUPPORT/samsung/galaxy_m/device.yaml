@@ -1,0 +1,9 @@
+vendor: samsung
+family: galaxy_m
+arch: aarch64
+status: planned
+kernel_config: 01_KERNEL/configuration/talco_defconfig
+drivers: [display, touchscreen, wifi, bluetooth, modem, audio, camera, gps, sensors, usb, storage, power]
+form_factor: phone
+dpi_typical: 400
+launcher_layout: phone

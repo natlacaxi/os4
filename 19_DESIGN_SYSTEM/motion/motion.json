@@ -1,0 +1,6 @@
+{
+  "fast_ms": 120,
+  "normal_ms": 240,
+  "slow_ms": 400,
+  "easing": "cubic-bezier(0.2,0,0,1)"
+}

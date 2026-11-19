@@ -1,0 +1,10 @@
+vendor: samsung
+family: galaxy_z
+arch: aarch64
+status: planned
+kernel_config: 01_KERNEL/configuration/talco_defconfig
+drivers: [display, touchscreen, wifi, bluetooth, modem, audio, camera, gps, sensors, usb, storage, power]
+form_factor: foldable
+dpi_typical: 420
+launcher_layout: phone
+foldable_layouts: [phone, tablet]   # bascule selon le depliage

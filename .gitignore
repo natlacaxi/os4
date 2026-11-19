@@ -1,0 +1,6 @@
+build/
+talco-kernel/build/
+*.o
+*.elf
+*.ppm
+*.iso

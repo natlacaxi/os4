@@ -1,0 +1,9 @@
+{
+  "family": "Inter, sans-serif",
+  "scale": {
+    "caption": 12,
+    "body": 16,
+    "title": 22,
+    "display": 32
+  }
+}
