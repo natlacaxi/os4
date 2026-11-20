@@ -3,51 +3,21 @@ on:
   push:
   pull_request:
   workflow_dispatch:
-
 jobs:
-  host:
-    name: Simulation hote + tests + interface
+  test:
+    name: ${{ matrix.job }}
     runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        job: [host, boot-x86, boot-arm64, linux-x86_64, linux-arm64]
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y python3-pil
-      - run: make
-      - run: make test
-      - run: make ui
-      - run: python3 -c "from PIL import Image; [Image.open(f'build/{n}.ppm').save(f'build/{n}.png') for n in ('phone','tablet')]"
-      - run: make image
-      - uses: actions/upload-artifact@v4
-        with:
-          name: interface-telephone-tablette
-          path: |
-            build/phone.png
-            build/tablet.png
-            build/talco-os3.tar.gz
-
-  boot-x86:
-    name: Noyau x86 dans QEMU
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 gcc-multilib
-      - run: make os
-      - run: ./18_QUALITY_ASSURANCE/integration_tests/boot_qemu.sh x86
+      - run: bash tools/ci/${{ matrix.job }}.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: talco-kernel-x86
-          path: talco-kernel/talco-kernel-x86.elf
-
-  boot-arm64:
-    name: Noyau ARM64 dans QEMU
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y qemu-system-arm gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
-      - run: make os-arm64
-      - run: ./18_QUALITY_ASSURANCE/integration_tests/boot_qemu.sh aarch64
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: talco-kernel-aarch64
-          path: talco-kernel/talco-kernel-aarch64.elf
+          name: ${{ matrix.job }}
+          path: out/
+          if-no-files-found: ignore
