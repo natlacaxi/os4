@@ -5,8 +5,10 @@ typedef unsigned short     u16;
 typedef unsigned int       u32;
 typedef unsigned long long u64;
 typedef unsigned long      usize;   /* 32 bits sur x86, 64 bits sur aarch64 */
+#ifndef NULL
 #define NULL ((void *)0)
-#define TALCO_VERSION "0.2.0"
+#endif
+#define TALCO_VERSION "0.3.0"
 
 /* chaines et memoire */
 usize kstrlen(const char *s);
