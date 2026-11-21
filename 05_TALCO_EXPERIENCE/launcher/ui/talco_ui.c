@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
     int fd = -1;
     for (int i = 0; i < 30 && fd < 0; i++) { fd = open("/dev/fb0", O_RDWR); if (fd < 0) sleep(1); }
-    if (fd < 0) return 0;                                   /* pas d'ecran : demarrage serie seul */
+    if (fd < 0) { fprintf(stderr, "talco-ui: pas de /dev/fb0 (pas de pilote ecran)\n"); return 0; }
     struct fb_var_screeninfo v; struct fb_fix_screeninfo fx;
     if (ioctl(fd, FBIOGET_VSCREENINFO, &v) || ioctl(fd, FBIOGET_FSCREENINFO, &fx)) return 1;
     if (v.bits_per_pixel != 32) { fprintf(stderr, "talco-ui: %u bpp non gere\n", v.bits_per_pixel); return 1; }

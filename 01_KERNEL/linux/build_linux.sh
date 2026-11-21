@@ -52,6 +52,11 @@ MK=(make ARCH=$KARCH ${CROSS:+CROSS_COMPILE=$CROSS})
 ARCH=$KARCH scripts/kconfig/merge_config.sh -m .config "$ROOT/01_KERNEL/configuration/talco_linux.config"
 scripts/config --set-str INITRAMFS_SOURCE "$WORK/initramfs.list"
 "${MK[@]}" olddefconfig
+echo "== Options ecran/tactile retenues :"
+grep -E "^CONFIG_(FB|VT|DRM|DRM_KMS_HELPER|DRM_FBDEV_EMULATION|DRM_VIRTIO_GPU|VIRTIO_PCI|VIRTIO_INPUT|INPUT_EVDEV)=" .config || true
+for o in DRM_VIRTIO_GPU DRM_FBDEV_EMULATION FB VIRTIO_INPUT; do
+  grep -q "^CONFIG_$o=y" .config || { echo "ERREUR : CONFIG_$o non active apres olddefconfig"; exit 1; }
+done
 "${MK[@]}" -j"$(nproc)" $TARGET
 cp "$IMG" "$ROOT/build/talco-linux-$ARCH.img"
 echo "== OK : build/talco-linux-$ARCH.img"

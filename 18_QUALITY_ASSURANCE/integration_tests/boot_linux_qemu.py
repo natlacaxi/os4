@@ -51,7 +51,7 @@ ok = wait(b"[ok] pret", 300)
 gui_marker = False
 if ok:
     if size:
-        gui_marker = wait(b"talco-ui: ecran", 90)
+        gui_marker = wait(b"talco-ui:", 60)
         time.sleep(4)
         screendump()
     for c in ["help", "cat /etc/release", "mkdir /x", "write /x/a.txt salut", "cat /x/a.txt", "cpu", "halt"]:
