@@ -18,6 +18,9 @@ static const app_t apps[] = {
 };
 #define NAPPS ((int)(sizeof apps / sizeof *apps))
 
+/* zones tactiles enregistrees pendant le dessin */
+static int hit_n, hit_x[40], hit_y[40], hit_s[40], hit_i[40];
+
 static void num2(char *o, int v) { o[0] = (char)('0' + v / 10 % 10); o[1] = (char)('0' + v % 10); }
 
 static void background(fb_t *f)
@@ -39,6 +42,7 @@ static void status_bar(fb_t *f, int hh, int mm, int bat, int mult)
 }
 static void icon(fb_t *f, int x, int y, int size, const app_t *a, int mult, int label)
 {
+    if (hit_n < 40) { hit_x[hit_n] = x; hit_y[hit_n] = y; hit_s[hit_n] = size; hit_i[hit_n] = (int)(a - apps); hit_n++; }
     fb_rrect(f, x, y, size, size, size * 28 / 100, a->color);
     char l[2] = { a->name[0], 0 };
     fb_text(f, x + (size - 8 * mult * 2) / 2, y + (size - 16 * mult * 2) / 2, l, mult * 2, ARGB(255, 255, 255, 255));
@@ -59,7 +63,7 @@ static void clock_block(fb_t *f, int cx, int y, int hh, int mm, int mult)
 
 void launcher_draw(fb_t *f, int dpi, int hh, int mm, int bat)
 {
-    dpi_ = dpi;
+    dpi_ = dpi; hit_n = 0;
     int mult = (dpi * 2 + 160) / 320; if (mult < 1) mult = 1;
     form_t ff = ui_form_factor(f->w, f->h, dpi);
     background(f);
@@ -97,4 +101,167 @@ void launcher_draw(fb_t *f, int dpi, int hh, int mm, int bat)
         for (int i = 0; i < 6; i++)
             icon(f, (f->w - dw) / 2 + D(20) + i * D(82), f->h - dh - D(14) + (dh - isz) / 2, isz, &apps[i == 5 ? 13 : i], mult, 0);
     }
+}
+
+int launcher_hit(int x, int y)
+{
+    for (int k = hit_n - 1; k >= 0; k--)
+        if (x >= hit_x[k] && x < hit_x[k] + hit_s[k] && y >= hit_y[k] && y < hit_y[k] + hit_s[k]) return hit_i[k];
+    return -1;
+}
+const char *launcher_app_name(int i) { return (i >= 0 && i < NAPPS) ? apps[i].name : ""; }
+int launcher_hit_count(void) { return hit_n; }
+int launcher_hit_center(int k, int *x, int *y, int *app)
+{
+    if (k < 0 || k >= hit_n) return 0;
+    *x = hit_x[k] + hit_s[k] / 2; *y = hit_y[k] + hit_s[k] / 2; *app = hit_i[k];
+    return 1;
+}
+
+
+/* ---------------- Calculatrice ---------------- */
+static double c_acc; static char c_op, c_in[20] = "0", c_disp[24] = "0"; static int c_fresh = 1, c_err;
+static int c_x[17], c_y[17], c_w[17], c_h[17]; static char c_ch[17]; static int c_n;
+static int rb_x, rb_y, rb_w, rb_h;
+
+static double c_parse(const char *s)
+{
+    double v = 0, f = 0.1; int dot = 0;
+    for (; *s; s++) {
+        if (*s == '.') dot = 1;
+        else if (!dot) v = v * 10 + (*s - '0');
+        else { v += (*s - '0') * f; f /= 10; }
+    }
+    return v;
+}
+static void c_fmt(double v, char *o)
+{
+    int n = 0;
+    if (v < 0) { o[n++] = '-'; v = -v; }
+    if (v >= 1e12) { o[0] = 'E'; o[1] = 'r'; o[2] = 'r'; o[3] = 0; c_err = 1; return; }
+    long long ip = (long long)v, sc = (long long)((v - (double)ip) * 1000000.0 + 0.5);
+    if (sc >= 1000000) { ip++; sc -= 1000000; }
+    char t[24]; int k = 0;
+    do { t[k++] = (char)('0' + ip % 10); ip /= 10; } while (ip);
+    while (k) o[n++] = t[--k];
+    if (sc) {
+        o[n++] = '.';
+        char fr[7]; for (int i = 5; i >= 0; i--) { fr[i] = (char)('0' + sc % 10); sc /= 10; }
+        int e = 6; while (e > 1 && fr[e - 1] == '0') e--;
+        for (int i = 0; i < e; i++) o[n++] = fr[i];
+    }
+    o[n] = 0;
+}
+static void c_show_err(void)
+{
+    const char *m = "Erreur"; int i = 0;
+    for (; m[i]; i++) c_disp[i] = m[i];
+    c_disp[i] = 0; c_acc = 0; c_op = 0; c_in[0] = '0'; c_in[1] = 0; c_fresh = 1;
+}
+static void c_apply(void)
+{
+    double b = c_parse(c_in);
+    if (c_op == '+') c_acc += b; else if (c_op == '-') c_acc -= b; else if (c_op == '*') c_acc *= b;
+    else if (c_op == '/') { if (b == 0) { c_show_err(); c_err = 1; return; } c_acc /= b; }
+}
+void calc_press(char c)
+{
+    if (c_err) { c_err = 0; c_acc = 0; c_op = 0; c_in[0] = '0'; c_in[1] = 0; c_fresh = 1; c_disp[0] = '0'; c_disp[1] = 0; }
+    int len = 0; while (c_in[len]) len++;
+    if (c == 'C') { c_acc = 0; c_op = 0; c_in[0] = '0'; c_in[1] = 0; c_fresh = 1; c_disp[0] = '0'; c_disp[1] = 0; return; }
+    if ((c >= '0' && c <= '9') || c == '.') {
+        if (c_fresh) { c_in[0] = 0; len = 0; }
+        if (c == '.') {
+            for (int i = 0; i < len; i++) if (c_in[i] == '.') return;
+            if (!len) { c_in[0] = '0'; len = 1; }
+        } else if (len == 1 && c_in[0] == '0') len = 0;
+        if (len < 12) { c_in[len] = c; c_in[len + 1] = 0; }
+        c_fresh = 0;
+        int i = 0; for (; c_in[i]; i++) c_disp[i] = c_in[i]; c_disp[i] = 0;
+        return;
+    }
+    if (c == '+' || c == '-' || c == '*' || c == '/' || c == '=') {
+        if (c_op && !c_fresh) { c_apply(); if (c_err) return; }
+        else if (!c_op) c_acc = c_parse(c_in);
+        c_fmt(c_acc, c_disp);
+        if (c_err) { c_show_err(); return; }
+        if (c == '=') { c_op = 0; int i = 0; for (; c_disp[i]; i++) c_in[i] = c_disp[i]; c_in[i] = 0; }
+        else c_op = c;
+        c_fresh = 1;
+    }
+}
+const char *calc_display(void) { return c_disp; }
+static int is_calc(int idx) { const char *a = apps[idx].name; return a[0] == 'C' && a[1] == 'a' && a[2] == 'l' && a[3] == 'c' && !a[4]; }
+
+static void calc_window(fb_t *f, int mult, int idx)
+{
+    int phone = ui_form_factor(f->w, f->h, dpi_) == FF_PHONE;
+    int w = phone ? f->w - D(32) : f->w * 55 / 100, h = phone ? f->h * 80 / 100 : f->h * 85 / 100;
+    int x = (f->w - w) / 2, y = (f->h - h) / 2;
+    fb_rrect(f, x, y, w, h, D(28), ARGB(255, 28, 30, 42));
+    fb_rrect(f, x + D(20), y + D(14), D(40), D(40), D(12), apps[idx].color);
+    fb_text(f, x + D(20) + (D(40) - 8 * mult) / 2, y + D(14) + (D(40) - 16 * mult) / 2, "C", mult, ARGB(255, 255, 255, 255));
+    fb_text(f, x + D(72), y + D(14) + (D(40) - 16 * mult * 2) / 2, "Calc", mult * 2, ARGB(255, 255, 255, 255));
+    fb_rrect(f, x + D(20), y + D(64), w - D(40), D(56), D(14), ARGB(255, 14, 15, 22));
+    int dm = mult * 2, tw = fb_text_w(c_disp, dm);
+    if (tw > w - D(56)) dm = mult;
+    fb_text(f, x + w - D(32) - fb_text_w(c_disp, dm), y + D(64) + (D(56) - 16 * dm) / 2, c_disp, dm, ARGB(255, 255, 255, 255));
+    int ky = y + D(132), by = y + h - D(64), avail = by - D(12) - ky, gap = D(8);
+    int kh = (avail - 4 * gap) / 5, kw = (w - D(40) - 3 * gap) / 4;
+    const char *keys = "789/456*123-0.=+";
+    c_n = 0;
+    for (int i = 0; i < 16; i++) {
+        int kx = x + D(20) + (i % 4) * (kw + gap), kyy = ky + (i / 4) * (kh + gap);
+        char c = keys[i]; int op = (c == '/' || c == '*' || c == '-' || c == '+' || c == '=');
+        fb_rrect(f, kx, kyy, kw, kh, D(14), op ? ARGB(255, 255, 159, 10) : ARGB(255, 58, 60, 78));
+        char l[2] = { c, 0 };
+        fb_text(f, kx + (kw - 8 * mult * 2) / 2, kyy + (kh - 16 * mult * 2) / 2, l, mult * 2, ARGB(255, 255, 255, 255));
+        c_x[c_n] = kx; c_y[c_n] = kyy; c_w[c_n] = kw; c_h[c_n] = kh; c_ch[c_n++] = c;
+    }
+    int cy = ky + 4 * (kh + gap);
+    fb_rrect(f, x + D(20), cy, w - D(40), kh, D(14), ARGB(255, 255, 69, 58));
+    fb_text(f, x + (w - 8 * mult * 2) / 2, cy + (kh - 16 * mult * 2) / 2, "C", mult * 2, ARGB(255, 255, 255, 255));
+    c_x[c_n] = x + D(20); c_y[c_n] = cy; c_w[c_n] = w - D(40); c_h[c_n] = kh; c_ch[c_n++] = 'C';
+    rb_x = x + D(20); rb_y = by; rb_w = w - D(40); rb_h = D(44);
+    fb_rrect(f, rb_x, rb_y, rb_w, rb_h, D(14), ARGB(255, 91, 108, 255));
+    fb_text(f, x + (w - fb_text_w("Retour", mult)) / 2, by + (D(44) - 16 * mult) / 2, "Retour", mult, ARGB(255, 255, 255, 255));
+}
+/* tap dans la fenetre d'une app : 1 = traite (rester ouvert), 0 = fermer */
+int launcher_app_tap(int x, int y, int idx)
+{
+    if (idx < 0 || idx >= NAPPS || !is_calc(idx)) return 0;
+    if (x >= rb_x && x < rb_x + rb_w && y >= rb_y && y < rb_y + rb_h) return 0;
+    for (int k = 0; k < c_n; k++)
+        if (x >= c_x[k] && x < c_x[k] + c_w[k] && y >= c_y[k] && y < c_y[k] + c_h[k]) { calc_press(c_ch[k]); break; }
+    return 1;
+}
+int launcher_calc_key_center(char c, int *x, int *y)
+{
+    for (int k = 0; k < c_n; k++) if (c_ch[k] == c) { *x = c_x[k] + c_w[k] / 2; *y = c_y[k] + c_h[k] / 2; return 1; }
+    return 0;
+}
+
+void launcher_app_window(fb_t *f, int dpi, int idx)
+{
+    if (idx < 0 || idx >= NAPPS) return;
+    dpi_ = dpi;
+    int mult = (dpi * 2 + 160) / 320; if (mult < 1) mult = 1;
+    int phone = ui_form_factor(f->w, f->h, dpi) == FF_PHONE;
+    fb_fill(f, 0, 0, f->w, f->h, ARGB(150, 0, 0, 0));
+    if (is_calc(idx)) { calc_window(f, mult, idx); return; }
+    int w = phone ? f->w - D(32) : f->w * 55 / 100, h = phone ? f->h * 45 / 100 : f->h * 65 / 100;
+    int x = (f->w - w) / 2, y = (f->h - h) / 2;
+    fb_rrect(f, x, y, w, h, D(28), ARGB(255, 28, 30, 42));
+    fb_rrect(f, x + D(20), y + D(20), D(48), D(48), D(14), apps[idx].color);
+    char l[2] = { apps[idx].name[0], 0 };
+    fb_text(f, x + D(20) + (D(48) - 8 * mult) / 2, y + D(20) + (D(48) - 16 * mult) / 2, l, mult, ARGB(255, 255, 255, 255));
+    fb_text(f, x + D(80), y + D(20) + (D(48) - 16 * mult * 2) / 2, apps[idx].name, mult * 2, ARGB(255, 255, 255, 255));
+    char line[64] = "Module 07_APPLICATIONS/"; int n = 23;
+    for (const char *c = apps[idx].name; *c && n < 62; c++, n++) line[n] = (*c >= 'A' && *c <= 'Z') ? (char)(*c + 32) : *c;
+    line[n] = 0;
+    fb_text(f, x + D(20), y + D(96), line, mult, ARGB(210, 255, 255, 255));
+    fb_text(f, x + D(20), y + D(96) + 16 * mult + D(8), "Contenu a venir.", mult, ARGB(160, 255, 255, 255));
+    int by = y + h - D(64);
+    fb_rrect(f, x + D(20), by, w - D(40), D(44), D(14), ARGB(255, 91, 108, 255));
+    fb_text(f, x + (w - fb_text_w("Retour", mult)) / 2, by + (D(44) - 16 * mult) / 2, "Retour", mult, ARGB(255, 255, 255, 255));
 }

@@ -1,6 +1,7 @@
 /* HAL Linux : le coeur TALCO (shell, fichiers, tas) tourne comme processus init (PID 1) sur un vrai noyau Linux. */
 #define _GNU_SOURCE
 #include <unistd.h>
+#include <signal.h>
 #include <termios.h>
 #include <time.h>
 #include <sys/mount.h>
@@ -24,6 +25,11 @@ void hal_init(usize a, usize b)
     mount("sysfs", "/sys", "sysfs", 0, 0);
     mount("tmpfs", "/tmp", "tmpfs", 0, 0);
     mount("devtmpfs", "/dev", "devtmpfs", 0, 0);
+    signal(SIGCHLD, SIG_IGN);
+    if (access("/talco-ui", X_OK) == 0 && fork() == 0) {      /* interface graphique si un ecran existe */
+        execl("/talco-ui", "talco-ui", (char *)0);
+        _exit(1);
+    }
     struct utsname u;
     if (uname(&u) == 0) {
         kstrlcpy(arch_buf, "Linux ", sizeof arch_buf);

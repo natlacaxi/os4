@@ -31,6 +31,8 @@ K="$ROOT/talco-kernel"
 $CC -O2 -static -Wall -Wextra -I"$K/include" -DTALCO_LINUX -o talco-init \
   "$K/core/kstring.c" "$K/core/console.c" "$K/core/heap.c" "$K/core/ramfs.c" "$K/core/shell.c" "$K/core/kmain.c" \
   "$K/arch/linux/hal_linux.c"
+UI="$ROOT/05_TALCO_EXPERIENCE/launcher/ui"
+$CC -O2 -static -Wall -Wextra -I"$UI" -o talco-ui "$UI/talco_ui.c" "$UI/gfx.c" "$UI/launcher.c"
 cat > initramfs.list <<LIST
 dir /dev 0755 0 0
 nod /dev/console 0600 0 0 c 5 1
@@ -39,6 +41,8 @@ dir /proc 0755 0 0
 dir /sys 0755 0 0
 dir /tmp 0755 0 0
 file /init $WORK/talco-init 0755 0 0
+file /talco-ui $WORK/talco-ui 0755 0 0
+dir /dev/input 0755 0 0
 LIST
 
 # 3. configuration puis compilation

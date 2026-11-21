@@ -9,3 +9,5 @@
 
 ## 0.3.0
 - Chemin Linux : build_linux.sh (Linux LTS 6.12 + coeur TALCO en /init), tests QEMU x86_64 et arm64 en CI.
+
+- Calculatrice fonctionnelle dans le launcher (tactile), tests de calcul.
