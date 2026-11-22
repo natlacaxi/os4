@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job: [host, boot-x86, boot-arm64, linux-x86_64, linux-arm64]
+        job: [host, boot-x86, boot-arm64, linux-x86_64, linux-arm64, android]
     steps:
       - uses: actions/checkout@v4
       - run: bash tools/ci/${{ matrix.job }}.sh
