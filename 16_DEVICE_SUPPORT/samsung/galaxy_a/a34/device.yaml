@@ -1,0 +1,23 @@
+# Samsung Galaxy A34 5G -- valeurs issues de mes connaissances generales, NON verifiees sur l'appareil : a confirmer
+# (specifications Samsung, GSMArena, sources opensource.samsung.com, "Parametres > A propos du telephone").
+vendor: samsung
+family: galaxy_a
+model: A34 5G
+model_numbers: [SM-A346B, SM-A346E, SM-A346M]     # a verifier : le numero exact est dans Parametres > A propos
+arch: aarch64
+soc: "MediaTek Dimensity 1080 (MT6877)"
+gpu: "Mali-G68 (Panfrost = pilote libre possible, support a valider)"
+display: { width: 1080, height: 2340, dpi: 420, refresh_hz: 120, type: "Super AMOLED", cutout: "encoche en goutte (haut)" }
+form_factor: phone
+launcher_layout: phone
+boot_image:
+  header_version: 4                    # lancement sous Android 13 : boot v4 + vendor_boot (a verifier)
+  pagesize: 4096
+  cmdline: "console=ttyS0,115200 panic=-1 talco.dpi=420"
+flash_method: odin                     # mode Download + Odin/Heimdall, jamais fastboot sur Samsung
+bootloader: { unlockable: "a verifier dans Options developpeur > Deverrouillage OEM", knox_trips: true }
+kernel_source: "opensource.samsung.com (rechercher le numero de modele)"
+render_backend_order: [drm_dumb, fbdev]    # drm_gpu (Panfrost + Wayland) = objectif
+kernel_config: [01_KERNEL/configuration/talco_arm64_phone.config]
+status: planned
+risk: "brick possible ; perte de donnees au deverrouillage ; Knox declenche ; modem/camera/GPU non supportes hors noyau Android"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Demarre Linux+TALCO dans QEMU, teste le shell serie et (si une forme est donnee) l'affichage graphique avec capture d'ecran.
-Usage : boot_linux_qemu.py x86_64|arm64 [tablet|phone]"""
+Usage : boot_linux_qemu.py x86_64|arm64 [tablet|phone|a34]"""
 import os, re, select, socket, subprocess, sys, time
 arch = sys.argv[1] if len(sys.argv) > 1 else "x86_64"
 form = sys.argv[2] if len(sys.argv) > 2 else ""
@@ -11,12 +11,13 @@ os.makedirs("out", exist_ok=True)
 sock = f"/tmp/talco-mon-{arch}-{form or 'serial'}.sock"
 shot = os.path.abspath(f"out/screen-{arch}-{form}.ppm")
 if os.path.exists(sock): os.remove(sock)
-size = {"tablet": (1280, 800), "phone": (720, 1560)}.get(form)
+size = {"tablet": (1280, 800), "phone": (720, 1560), "a34": (1080, 2340)}.get(form)
+extra = " talco.dpi=420" if form == "a34" else ""
 if arch == "x86_64":
-    cmd = ["qemu-system-x86_64", "-m", "512", "-cpu", "max", "-kernel", img, "-append", "console=ttyS0 panic=-1"]
+    cmd = ["qemu-system-x86_64", "-m", "512", "-cpu", "max", "-kernel", img, "-append", "console=ttyS0 panic=-1" + extra]
     if size: cmd += ["-vga", "none"]
 else:
-    cmd = ["qemu-system-aarch64", "-M", "virt", "-cpu", "cortex-a57", "-m", "512", "-kernel", img, "-append", "console=ttyAMA0 panic=-1"]
+    cmd = ["qemu-system-aarch64", "-M", "virt", "-cpu", "cortex-a57", "-m", "512", "-kernel", img, "-append", "console=ttyAMA0 panic=-1" + extra]
 if size:
     cmd += ["-device", f"virtio-gpu-pci,edid=on,xres={size[0]},yres={size[1]}", "-device", "virtio-tablet-pci",
             "-display", "none", "-serial", "stdio", "-monitor", f"unix:{sock},server,nowait"]

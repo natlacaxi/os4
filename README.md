@@ -28,3 +28,6 @@ make os / make os-arm64            # noyaux x86 / ARM64
 make ui                            # rend les ecrans telephone et tablette (PPM)
 ```
 Voir 21_DOCUMENTATION/hardware/PORTING.md pour l'etat reel par appareil.
+
+## Galaxy A34 5G
+Voir 16_DEVICE_SUPPORT/samsung/galaxy_a/a34/README.md ; launcher Android : 21_DOCUMENTATION/hardware/ANDROID_LAUNCHER.md (job CI `android` : ajouter `, android` a la matrice de ci.yml).

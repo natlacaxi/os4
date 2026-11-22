@@ -18,6 +18,15 @@
 #include "launcher.h"
 
 static int dpi_for(int w, int h) { return h > w ? 320 : 200; }
+/* densite imposee par la ligne de commande du noyau : talco.dpi=420 (utile pour un vrai telephone) */
+static int cmdline_dpi(void)
+{
+    char b[2048] = {0}; FILE *f = fopen("/proc/cmdline", "r");
+    if (!f) return 0;
+    size_t n = fread(b, 1, sizeof b - 1, f); (void)n; fclose(f);
+    char *p = strstr(b, "talco.dpi=");
+    return p ? atoi(p + 10) : 0;
+}
 
 static void compose(fb_t *f, int dpi, int app)
 {
@@ -31,7 +40,8 @@ static int render_file(const char *path, int w, int h, int app, const char *keys
 {
     fb_t f = { calloc((size_t)w * h, 4), w, h };
     for (; keys && *keys; keys++) calc_press(*keys);
-    compose(&f, dpi_for(w, h), app);
+    const char *e = getenv("TALCO_DPI");
+    compose(&f, e ? atoi(e) : dpi_for(w, h), app);
     FILE *o = fopen(path, "wb");
     if (!o) return 1;
     fprintf(o, "P6\n%d %d\n255\n", w, h);
@@ -177,9 +187,10 @@ int main(int argc, char **argv)
         else sleep(1);
     }
     if (!mode) { fprintf(stderr, "talco-ui: pas d'ecran (ni DRM ni fbdev)\n"); return 0; }
-    int dpi = dpi_for(W, H);
-    fprintf(stderr, "talco-ui: ecran %dx%d, %s (rendu %s)\n", W, H,
-            ui_form_factor(W, H, dpi) == FF_TABLET ? "tablette" : "telephone", mode == 1 ? "drm" : "fbdev");
+    int dpi = cmdline_dpi();
+    if (dpi < 100 || dpi > 800) dpi = dpi_for(W, H);
+    fprintf(stderr, "talco-ui: ecran %dx%d, %s (dpi %d, rendu %s)\n", W, H,
+            ui_form_factor(W, H, dpi) == FF_TABLET ? "tablette" : "telephone", dpi, mode == 1 ? "drm" : "fbdev");
     int tty = open("/dev/tty0", O_WRONLY);                 /* cache le curseur texte de la console */
     if (tty >= 0) { (void)!write(tty, "\033[?25l", 6); close(tty); }
     fb_t f = { calloc((size_t)W * H, 4), W, H };

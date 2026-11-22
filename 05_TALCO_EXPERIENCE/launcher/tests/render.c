@@ -59,5 +59,6 @@ int main(void)
     int e = calc_tests();
     e |= render("phone.ppm", 720, 1560, 320, 0);
     e |= render("tablet.ppm", 1600, 1000, 240, 1);
+    e |= render("a34.ppm", 1080, 2340, 420, 0);        /* Samsung Galaxy A34 5G : 1080x2340, ~420 dpi */
     return e;
 }

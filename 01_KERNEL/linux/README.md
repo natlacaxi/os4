@@ -4,4 +4,4 @@
 Config : `01_KERNEL/configuration/talco_linux.config` (initramfs, devtmpfs, virtio GPU/clavier-tactile).
 Etape suivante : lancer le launcher (05_TALCO_EXPERIENCE) sur /dev/fb0 et lire le tactile via /dev/input.
 
-Telephones : voir 16_DEVICE_SUPPORT/samsung/galaxy_a/README.md (modele generique, methodes de rendu, limites).
+Telephones : voir 16_DEVICE_SUPPORT/samsung/galaxy_a/a34/README.md et galaxy_a/README.md (modele generique, methodes de rendu, limites).

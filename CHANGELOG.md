@@ -19,3 +19,5 @@
 ## 0.4.0
 - talco-ui : rendu DRM/KMS double tampon (page flip vblank) avec repli fbdev.
 - Modele generique Samsung Galaxy A, generateur boot.img v2 teste, base noyau ARM64 telephone.
+
+- Galaxy A34 5G : fiche appareil, launcher Android (APK) construit en CI, generateur boot v4 + vendor_boot, rendu 1080x2340 teste.
