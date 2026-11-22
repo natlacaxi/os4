@@ -1,9 +1,17 @@
+# MODELE GENERIQUE Samsung Galaxy A : copier ce dossier en galaxy_a/<modele> (ex. a52, a54) et remplir.
 vendor: samsung
 family: galaxy_a
+model: A__            # a remplir
+codename: ""          # nom de code (wiki postmarketOS / sources Samsung)
 arch: aarch64
-status: planned
-kernel_config: 01_KERNEL/configuration/talco_defconfig
-drivers: [display, touchscreen, wifi, bluetooth, modem, audio, camera, gps, sensors, usb, storage, power]
+soc: ""               # exynos | snapdragon | mediatek  + reference exacte
+gpu: ""               # mali (panfrost) | adreno (freedreno) | powervr
+display: { width: 1080, height: 2400, dpi: 400, panel_driver: "" }
 form_factor: phone
-dpi_typical: 400
 launcher_layout: phone
+boot_image: { header_version: 2, base: "0x10000000", pagesize: 2048, cmdline: "console=ttyS0,115200 panic=-1" }
+flash_method: odin            # Samsung : mode Download + Odin/Heimdall (pas fastboot)
+bootloader: { unlockable: unknown, knox_trips: true }
+render_backend_order: [drm_gpu, drm_dumb, fbdev]   # voir README
+kernel_config: [01_KERNEL/configuration/talco_arm64_phone.config]
+status: planned

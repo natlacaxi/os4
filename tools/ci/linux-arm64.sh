@@ -5,5 +5,7 @@ sudo apt-get install -y -qq build-essential bc flex bison libssl-dev libelf-dev 
   python3-pil qemu-system-x86 qemu-system-arm gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu libc6-dev-arm64-cross
 ./01_KERNEL/linux/build_linux.sh arm64
 cp build/talco-linux-arm64.img out/
+python3 17_BUILD_SYSTEM/image_builder/test_mkbootimg.py
+python3 17_BUILD_SYSTEM/image_builder/mkbootimg_min.py --kernel build/talco-linux-arm64.img --cmdline "console=ttyS0,115200 panic=-1" --output out/boot-generique-NE-PAS-FLASHER.img
 ./18_QUALITY_ASSURANCE/integration_tests/boot_linux_qemu.py arm64 tablet
 ./18_QUALITY_ASSURANCE/integration_tests/boot_linux_qemu.py arm64 phone

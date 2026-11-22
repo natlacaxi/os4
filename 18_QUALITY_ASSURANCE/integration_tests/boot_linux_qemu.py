@@ -62,7 +62,7 @@ if ok:
 p.kill()
 txt = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", buf.decode(errors="replace")).replace("\r", "")
 print("---- sortie serie ----"); print(txt[-6000:]); print("----------------------")
-res = [("demarrage Linux + TALCO", "[ok] pret" in txt), ("banniere", "TALCO-OS3 0.3.0" in txt),
+res = [("demarrage Linux + TALCO", "[ok] pret" in txt), ("banniere", "TALCO-OS3 0.4.0" in txt),
        ("tourne sur Linux", "sur Linux" in txt), ("fichier ecrit puis relu", any(l.strip() == "salut" for l in txt.split("\n")))]
 if size:
     want = "tablette" if form == "tablet" else "telephone"

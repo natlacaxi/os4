@@ -15,3 +15,7 @@
 - Correctif : options noyau FB/DRM/virtio pour l ecran graphique, verification des options en CI.
 
 - App Notes avec clavier AZERTY tactile ; heure de Paris dans talco-ui.
+
+## 0.4.0
+- talco-ui : rendu DRM/KMS double tampon (page flip vblank) avec repli fbdev.
+- Modele generique Samsung Galaxy A, generateur boot.img v2 teste, base noyau ARM64 telephone.

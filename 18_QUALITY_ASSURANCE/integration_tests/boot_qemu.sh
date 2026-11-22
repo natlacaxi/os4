@@ -18,10 +18,10 @@ echo "---- sortie serie ($ARCH) ----"; cat "$LOG.clean"; echo "-----------------
 
 fail=0
 check() { grep -q -- "$1" "$LOG.clean" && echo "OK   : $2" || { echo "FAIL : $2"; fail=1; }; }
-check "TALCO-OS3 0.3.0" "banniere"
+check "TALCO-OS3 0.4.0" "banniere"
 check "\[ok\] pret" "demarrage complet"
 if [ "$ARCH" = "aarch64" ]; then
   grep -qx "salut" "$LOG.clean" && echo "OK   : ecriture/lecture de fichier" || { echo "FAIL : ecriture/lecture de fichier"; fail=1; }
-  check "TALCO-OS3 0.3.0" "cat /etc/release"
+  check "TALCO-OS3 0.4.0" "cat /etc/release"
 fi
 exit $fail
