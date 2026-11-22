@@ -13,3 +13,5 @@
 - Calculatrice fonctionnelle dans le launcher (tactile), tests de calcul.
 
 - Correctif : options noyau FB/DRM/virtio pour l ecran graphique, verification des options en CI.
+
+- App Notes avec clavier AZERTY tactile ; heure de Paris dans talco-ui.

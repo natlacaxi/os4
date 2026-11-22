@@ -38,7 +38,21 @@ static int calc_tests(void)
     for (int i = 0; i < 720 * 1560; i++) { unsigned c = f.px[i]; fputc(c >> 16, o); fputc(c >> 8, o); fputc(c, o); }
     fclose(o); free(f.px);
     printf("calculatrice : %s\n", bad ? "ECHEC" : "OK (8 calculs + taps)");
-    return bad;
+    /* notes : taps sur le clavier */
+    f.px = calloc(720 * 1560, 4); int nb = 0;
+    launcher_draw(&f, 320, 9, 41, 78); launcher_app_window(&f, 320, 11);
+    const char *seq = "bonjour le monde<<<e\n1";
+    for (const char *k = seq; *k; k++) {
+        int x, y; if (!launcher_notes_key_center(*k, &x, &y) || !launcher_app_tap(x, y, 11)) nb++;
+        launcher_app_window(&f, 320, 11);
+    }
+    if (strcmp(notes_text(), "bonjour le moe\n1")) { printf("ECHEC notes -> [%s]\n", notes_text()); nb++; }
+    launcher_app_window(&f, 320, 11);
+    o = fopen("notes.ppm", "wb"); fprintf(o, "P6\n720 1560\n255\n");
+    for (int i = 0; i < 720 * 1560; i++) { unsigned c = f.px[i]; fputc(c >> 16, o); fputc(c >> 8, o); fputc(c, o); }
+    fclose(o); free(f.px);
+    printf("notes : %s\n", nb ? "ECHEC" : "OK (clavier AZERTY, effacer, entree)");
+    return bad + nb;
 }
 int main(void)
 {

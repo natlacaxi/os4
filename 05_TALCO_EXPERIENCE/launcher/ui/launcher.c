@@ -53,11 +53,26 @@ static void icon(fb_t *f, int x, int y, int size, const app_t *a, int mult, int 
         fb_text(f, x + (size - fb_text_w(buf, mult)) / 2, y + size + D(6), buf, mult, ARGB(255, 255, 255, 255));
     }
 }
+static char date_str[24] = "jeu. 19 novembre";
+void launcher_set_date(int wday, int mday, int mon)
+{
+    static const char *wd[] = {"dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."};
+    static const char *mo[] = {"janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"};
+    if (wday < 0 || wday > 6 || mon < 0 || mon > 11 || mday < 1 || mday > 31) return;
+    int n = 0;
+    for (const char *c = wd[wday]; *c; c++) date_str[n++] = *c;
+    date_str[n++] = ' ';
+    if (mday >= 10) date_str[n++] = (char)('0' + mday / 10);
+    date_str[n++] = (char)('0' + mday % 10); date_str[n++] = ' ';
+    for (const char *c = mo[mon]; *c; c++) date_str[n++] = *c;
+    date_str[n] = 0;
+}
+
 static void clock_block(fb_t *f, int cx, int y, int hh, int mm, int mult)
 {
     char t[6] = "00:00"; num2(t, hh); num2(t + 3, mm);
     fb_text(f, cx - fb_text_w(t, mult * 3) / 2, y, t, mult * 3, ARGB(255, 255, 255, 255));
-    const char *d = "jeu. 19 novembre";
+    const char *d = date_str;
     fb_text(f, cx - fb_text_w(d, mult) / 2, y + 16 * mult * 3 + D(4), d, mult, ARGB(200, 255, 255, 255));
 }
 
@@ -226,11 +241,81 @@ static void calc_window(fb_t *f, int mult, int idx)
     fb_rrect(f, rb_x, rb_y, rb_w, rb_h, D(14), ARGB(255, 91, 108, 255));
     fb_text(f, x + (w - fb_text_w("Retour", mult)) / 2, by + (D(44) - 16 * mult) / 2, "Retour", mult, ARGB(255, 255, 255, 255));
 }
+
+/* ---------------- Notes + clavier AZERTY ---------------- */
+static char n_buf[400]; static int n_len;
+static struct { int x, y, w, h; char ch; } nk[60]; static int nk_n;
+void notes_press(char c)
+{
+    if (c == '<') { if (n_len) n_buf[--n_len] = 0; return; }
+    if (n_len < (int)sizeof n_buf - 1) { n_buf[n_len++] = c; n_buf[n_len] = 0; }
+}
+const char *notes_text(void) { return n_buf; }
+static int is_notes(int idx) { const char *a = apps[idx].name; return a[0] == 'N' && a[1] == 'o' && a[2] == 't' && a[3] == 'e' && a[4] == 's' && !a[5]; }
+
+static void nkey(fb_t *f, int x, int y, int w, int h, char c, const char *label, int km, u32 col)
+{
+    fb_rrect(f, x, y, w, h, D(10), col);
+    char l[2] = { c, 0 };
+    if (!label) label = l;
+    fb_text(f, x + (w - fb_text_w(label, km)) / 2, y + (h - 16 * km) / 2, label, km, ARGB(255, 255, 255, 255));
+    if (nk_n < 60) { nk[nk_n].x = x; nk[nk_n].y = y; nk[nk_n].w = w; nk[nk_n].h = h; nk[nk_n].ch = c; nk_n++; }
+}
+static void notes_window(fb_t *f, int mult, int idx)
+{
+    int phone = ui_form_factor(f->w, f->h, dpi_) == FF_PHONE;
+    int w = phone ? f->w - D(32) : f->w * 70 / 100, h = phone ? f->h * 85 / 100 : f->h * 90 / 100;
+    int x = (f->w - w) / 2, y = (f->h - h) / 2, km = mult < 2 ? 2 : mult;
+    fb_rrect(f, x, y, w, h, D(28), ARGB(255, 28, 30, 42));
+    fb_rrect(f, x + D(20), y + D(14), D(40), D(40), D(12), apps[idx].color);
+    fb_text(f, x + D(20) + (D(40) - 8 * mult) / 2, y + D(14) + (D(40) - 16 * mult) / 2, "N", mult, ARGB(255, 255, 255, 255));
+    fb_text(f, x + D(72), y + D(14) + (D(40) - 16 * mult * 2) / 2, "Notes", mult * 2, ARGB(255, 255, 255, 255));
+    int by = y + h - D(64), kh = D(40), gap = D(6), ky = by - D(12) - (5 * kh + 4 * gap);
+    int tx = x + D(20), ty = y + D(64), tw = w - D(40), th = ky - D(10) - ty;
+    fb_rrect(f, tx, ty, tw, th, D(14), ARGB(255, 14, 15, 22));
+    int cx = tx + D(12), cy = ty + D(12), lh = 16 * mult + D(4), maxx = tx + tw - D(12), bot = ty + th - D(8);
+    if (!n_len) fb_text(f, cx, cy, "Tapez votre note...", mult, ARGB(120, 255, 255, 255));
+    for (int i = 0; i < n_len; i++) {
+        char c = n_buf[i];
+        if (c == '\n') { cx = tx + D(12); cy += lh; continue; }
+        if (cx + 8 * mult > maxx) { cx = tx + D(12); cy += lh; }
+        if (cy + 16 * mult > bot) break;
+        char s1[2] = { c, 0 };
+        fb_text(f, cx, cy, s1, mult, ARGB(255, 255, 255, 255));
+        cx += 8 * mult;
+    }
+    if (n_len && cx + 8 * mult > maxx) { cx = tx + D(12); cy += lh; }
+    if (cy + 16 * mult <= bot) fb_text(f, cx, cy, "_", mult, ARGB(200, 91, 108, 255));
+    nk_n = 0;
+    const char *rows[4] = { "1234567890", "azertyuiop", "qsdfghjklm", "wxcvbn,.'<" };
+    int kw = (w - D(40) - 9 * gap) / 10;
+    for (int r = 0; r < 4; r++) for (int c = 0; c < 10; c++) {
+        char ch = rows[r][c];
+        nkey(f, x + D(20) + c * (kw + gap), ky + r * (kh + gap), kw, kh, ch, 0, km, ch == '<' ? ARGB(255, 255, 69, 58) : ARGB(255, 58, 60, 78));
+    }
+    int r5 = ky + 4 * (kh + gap);
+    nkey(f, x + D(20), r5, 7 * kw + 6 * gap, kh, ' ', "espace", mult, ARGB(255, 58, 60, 78));
+    nkey(f, x + D(20) + 7 * (kw + gap), r5, 3 * kw + 2 * gap, kh, '\n', "Entree", mult, ARGB(255, 255, 159, 10));
+    rb_x = x + D(20); rb_y = by; rb_w = w - D(40); rb_h = D(44);
+    fb_rrect(f, rb_x, rb_y, rb_w, rb_h, D(14), ARGB(255, 91, 108, 255));
+    fb_text(f, x + (w - fb_text_w("Retour", mult)) / 2, by + (D(44) - 16 * mult) / 2, "Retour", mult, ARGB(255, 255, 255, 255));
+}
+int launcher_notes_key_center(char c, int *x, int *y)
+{
+    for (int k = 0; k < nk_n; k++) if (nk[k].ch == c) { *x = nk[k].x + nk[k].w / 2; *y = nk[k].y + nk[k].h / 2; return 1; }
+    return 0;
+}
+
 /* tap dans la fenetre d'une app : 1 = traite (rester ouvert), 0 = fermer */
 int launcher_app_tap(int x, int y, int idx)
 {
-    if (idx < 0 || idx >= NAPPS || !is_calc(idx)) return 0;
+    if (idx < 0 || idx >= NAPPS || (!is_calc(idx) && !is_notes(idx))) return 0;
     if (x >= rb_x && x < rb_x + rb_w && y >= rb_y && y < rb_y + rb_h) return 0;
+    if (is_notes(idx)) {
+        for (int k = 0; k < nk_n; k++)
+            if (x >= nk[k].x && x < nk[k].x + nk[k].w && y >= nk[k].y && y < nk[k].y + nk[k].h) { notes_press(nk[k].ch); break; }
+        return 1;
+    }
     for (int k = 0; k < c_n; k++)
         if (x >= c_x[k] && x < c_x[k] + c_w[k] && y >= c_y[k] && y < c_y[k] + c_h[k]) { calc_press(c_ch[k]); break; }
     return 1;
@@ -249,6 +334,7 @@ void launcher_app_window(fb_t *f, int dpi, int idx)
     int phone = ui_form_factor(f->w, f->h, dpi) == FF_PHONE;
     fb_fill(f, 0, 0, f->w, f->h, ARGB(150, 0, 0, 0));
     if (is_calc(idx)) { calc_window(f, mult, idx); return; }
+    if (is_notes(idx)) { notes_window(f, mult, idx); return; }
     int w = phone ? f->w - D(32) : f->w * 55 / 100, h = phone ? f->h * 45 / 100 : f->h * 65 / 100;
     int x = (f->w - w) / 2, y = (f->h - h) / 2;
     fb_rrect(f, x, y, w, h, D(28), ARGB(255, 28, 30, 42));

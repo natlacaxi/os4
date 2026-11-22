@@ -19,6 +19,7 @@ static int dpi_for(int w, int h) { return h > w ? 320 : 200; }
 static void compose(fb_t *f, int dpi, int app)
 {
     time_t t = time(0); struct tm *tm = localtime(&t);
+    if (tm) launcher_set_date(tm->tm_wday, tm->tm_mday, tm->tm_mon);
     launcher_draw(f, dpi, tm ? tm->tm_hour : 9, tm ? tm->tm_min : 41, 78);
     if (app >= 0) launcher_app_window(f, dpi, app);
 }
@@ -59,6 +60,8 @@ static void scan_inputs(void)
 
 int main(int argc, char **argv)
 {
+    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);     /* heure de Paris, sans base de fuseaux */
+    tzset();
     if (argc >= 5 && !strcmp(argv[1], "--render"))
         return render_file(argv[2], atoi(argv[3]), atoi(argv[4]), argc > 5 ? atoi(argv[5]) : -1, argc > 6 ? argv[6] : 0);
 
@@ -68,6 +71,8 @@ int main(int argc, char **argv)
     struct fb_var_screeninfo v; struct fb_fix_screeninfo fx;
     if (ioctl(fd, FBIOGET_VSCREENINFO, &v) || ioctl(fd, FBIOGET_FSCREENINFO, &fx)) return 1;
     if (v.bits_per_pixel != 32) { fprintf(stderr, "talco-ui: %u bpp non gere\n", v.bits_per_pixel); return 1; }
+    int tty = open("/dev/tty0", O_WRONLY);                 /* cache le curseur texte de la console */
+    if (tty >= 0) { (void)!write(tty, "\033[?25l", 6); close(tty); }
     unsigned char *map = mmap(0, fx.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (map == MAP_FAILED) { fprintf(stderr, "talco-ui: mmap impossible\n"); return 1; }
     int W = (int)v.xres, H = (int)v.yres, dpi = dpi_for(W, H);
