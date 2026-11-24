@@ -13,15 +13,18 @@ JNIEXPORT void JNICALL Java_com_talco_os_TalcoView_nativeRender(JNIEnv *e, jobje
     if (!fb.px || fb.w != w || fb.h != h) { free(fb.px); fb.px = calloc((size_t)w * h, 4); fb.w = w; fb.h = h; app = -1; }
     time_t t = time(0); struct tm tmv; localtime_r(&t, &tmv);
     launcher_set_date(tmv.tm_wday, tmv.tm_mday, tmv.tm_mon);
-    launcher_draw(&fb, dpi, tmv.tm_hour, tmv.tm_min, bat);
-    if (app >= 0) launcher_app_window(&fb, dpi, app);
+    launcher_render(&fb, dpi, tmv.tm_hour, tmv.tm_min, bat, app);
     (*e)->SetIntArrayRegion(e, arr, 0, w * h, (const jint *)fb.px);
 }
-JNIEXPORT void JNICALL Java_com_talco_os_TalcoView_nativeTap(JNIEnv *e, jobject o, jint x, jint y)
+/* retourne l'index d'une application a ouvrir par Android, ou -1 */
+JNIEXPORT jint JNICALL Java_com_talco_os_TalcoView_nativeTap(JNIEnv *e, jobject o, jint x, jint y)
 {
     (void)e; (void)o;
-    if (app >= 0) { if (!launcher_app_tap(x, y, app)) app = -1; }
-    else app = launcher_hit(x, y);
+    if (app >= 0) { if (!launcher_app_tap(x, y, app)) app = -1; return -1; }
+    int i = launcher_hit(x, y);
+    if (i < 0) return -1;
+    if (launcher_app_internal(i)) { app = i; return -1; }
+    return i;
 }
 JNIEXPORT jboolean JNICALL Java_com_talco_os_TalcoView_nativeBack(JNIEnv *e, jobject o)
 {

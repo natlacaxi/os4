@@ -21,3 +21,9 @@
 - Modele generique Samsung Galaxy A, generateur boot.img v2 teste, base noyau ARM64 telephone.
 
 - Galaxy A34 5G : fiche appareil, launcher Android (APK) construit en CI, generateur boot v4 + vendor_boot, rendu 1080x2340 teste.
+
+## 0.5.0
+- Style TALCO Glass : verre dépoli (flou, transparence, reflets), police Inter (SIL OFL), icônes vectorielles originales, fond d'écran dégradé, widgets, barre de recherche, calculatrice et notes restylées.
+- Cache du fond et ombres allégées pour rester fluide sur téléphone.
+
+- Launcher Android : les icônes ouvrent les vraies applications (téléphone, messages, navigateur, appareil photo, réglages…) ; Calc et Notes restent dans TALCO.

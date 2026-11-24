@@ -13,5 +13,8 @@ Pour activer ce job : modifier `.github/workflows/ci.yml` et ajouter `, android`
 Samsung One UI : Parametres > Applications > Applications par defaut > Application d'ecran d'accueil > TALCO.
 Pour revenir : meme menu, choisir « One UI Home ». Desinstaller : Parametres > Applications > TALCO.
 
+## Applications
+Les icônes Téléphone, Messages, Contacts, Navigateur, Appareil, Galerie, Fichiers, Calendrier, Mail, Musique, Plans, Réglages, Boutique et Assistant ouvrent les **vraies applications Android** (les applis par défaut de l’appareil). Calculatrice et Notes sont celles de TALCO.
+
 ## Limites
-Rendu logiciel (pas de GPU), pas de widgets Android, apps TALCO = celles du depot (calculatrice, notes sans sauvegarde). Pas de boutons d'appel ni de SMS reels.
+Rendu logiciel (pas de GPU), pas de widgets Android, apps TALCO = celles du depot (calculatrice, notes sans sauvegarde). 

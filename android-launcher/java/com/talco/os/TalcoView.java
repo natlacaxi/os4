@@ -1,11 +1,16 @@
 package com.talco.os;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.BatteryManager;
+import android.provider.ContactsContract;
+import android.provider.MediaStore;
+import android.provider.Settings;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 /** Affiche le launcher TALCO (rendu C) et transmet les touches. */
 public class TalcoView extends View {
@@ -18,7 +23,7 @@ public class TalcoView extends View {
     };
 
     native void nativeRender(int[] px, int w, int h, int dpi, int bat);
-    native void nativeTap(int x, int y);
+    native int nativeTap(int x, int y);
     native boolean nativeBack();
 
     public TalcoView(Context c) { super(c); setFocusable(true); }
@@ -46,8 +51,37 @@ public class TalcoView extends View {
     }
 
     @Override public boolean onTouchEvent(MotionEvent e) {
-        if (e.getAction() == MotionEvent.ACTION_DOWN) { nativeTap((int) e.getX(), (int) e.getY()); invalidate(); }
+        if (e.getAction() == MotionEvent.ACTION_DOWN) {
+            int app = nativeTap((int) e.getX(), (int) e.getY());
+            if (app >= 0) launch(app);
+            invalidate();
+        }
         return true;
+    }
+
+    /** Ouvre la vraie application Android correspondant a l'icone (telephone, messages, navigateur...). */
+    private void launch(int idx) {
+        Intent i;
+        switch (idx) {
+            case 0: i = new Intent(Intent.ACTION_DIAL); break;
+            case 1: i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MESSAGING); break;
+            case 2: i = new Intent(Intent.ACTION_VIEW, ContactsContract.Contacts.CONTENT_URI); break;
+            case 3: i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_BROWSER); break;
+            case 4: i = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA); break;
+            case 5: i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_GALLERY); break;
+            case 6: i = new Intent(Intent.ACTION_GET_CONTENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE); break;
+            case 7: i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_CALENDAR); break;
+            case 8: i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_EMAIL); break;
+            case 9: i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MUSIC); break;
+            case 12: i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MAPS); break;
+            case 13: i = new Intent(Settings.ACTION_SETTINGS); break;
+            case 14: i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MARKET); break;
+            case 15: i = new Intent(Intent.ACTION_ASSIST); break;
+            default: return;
+        }
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try { getContext().startActivity(i); }
+        catch (Exception ex) { Toast.makeText(getContext(), "Application introuvable", Toast.LENGTH_SHORT).show(); }
     }
 
     public boolean back() { boolean r = nativeBack(); if (r) invalidate(); return r; }

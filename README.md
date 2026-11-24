@@ -31,3 +31,7 @@ Voir 21_DOCUMENTATION/hardware/PORTING.md pour l'etat reel par appareil.
 
 ## Galaxy A34 5G
 Voir 16_DEVICE_SUPPORT/samsung/galaxy_a/a34/README.md ; launcher Android : 21_DOCUMENTATION/hardware/ANDROID_LAUNCHER.md (job CI `android` : ajouter `, android` a la matrice de ci.yml).
+
+## Crédits
+Police Inter, © The Inter Project Authors, licence SIL OFL 1.1 (LICENSES/OFL-Inter.txt). Régénérer l'atlas : `python3 tools/gen_font.py`.
+Le style « verre dépoli » est une inspiration générale du design mobile actuel ; icônes, fond d'écran et code sont propres à TALCO.

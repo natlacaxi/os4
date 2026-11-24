@@ -32,8 +32,7 @@ static void compose(fb_t *f, int dpi, int app)
 {
     time_t t = time(0); struct tm *tm = localtime(&t);
     if (tm) launcher_set_date(tm->tm_wday, tm->tm_mday, tm->tm_mon);
-    launcher_draw(f, dpi, tm ? tm->tm_hour : 9, tm ? tm->tm_min : 41, 78);
-    if (app >= 0) launcher_app_window(f, dpi, app);
+    launcher_render(f, dpi, tm ? tm->tm_hour : 9, tm ? tm->tm_min : 41, 78, app);
 }
 
 static int render_file(const char *path, int w, int h, int app, const char *keys)
