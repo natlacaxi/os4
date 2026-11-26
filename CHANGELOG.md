@@ -29,3 +29,5 @@
 - Launcher Android : les icônes ouvrent les vraies applications (téléphone, messages, navigateur, appareil photo, réglages…) ; Calc et Notes restent dans TALCO.
 
 - Launcher Android : Fichiers (volumes interne/SD, tri nom/taille/date/type, défilement, renommer/copier/déplacer/supprimer, nouveau dossier) et Réglages (état de l'appareil, SIM, volume, raccourcis système).
+
+- APK : bibliotheque native aussi en x86_64 (emulateur Android Studio sur PC). Scripts QEMU pour PC et guide TESTER_SUR_PC.md.
