@@ -37,7 +37,7 @@ static void compose(fb_t *f, int dpi, int app)
 
 static int render_file(const char *path, int w, int h, int app, const char *keys)
 {
-    fb_t f = { calloc((size_t)w * h, 4), w, h };
+    fb_t f = { .px = calloc((size_t)w * h, 4), .w = w, .h = h };
     for (; keys && *keys; keys++) calc_press(*keys);
     const char *e = getenv("TALCO_DPI");
     compose(&f, e ? atoi(e) : dpi_for(w, h), app);
@@ -192,7 +192,7 @@ int main(int argc, char **argv)
             ui_form_factor(W, H, dpi) == FF_TABLET ? "tablette" : "telephone", dpi, mode == 1 ? "drm" : "fbdev");
     int tty = open("/dev/tty0", O_WRONLY);                 /* cache le curseur texte de la console */
     if (tty >= 0) { (void)!write(tty, "\033[?25l", 6); close(tty); }
-    fb_t f = { calloc((size_t)W * H, 4), W, H };
+    fb_t f = { .px = calloc((size_t)W * H, 4), .w = W, .h = H };
     int app = -1, lastmin = -1, first = 1;
 
     for (;;) {

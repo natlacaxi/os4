@@ -14,9 +14,13 @@ static float fsq(float x)                                   /* racine carree san
 }
 static float fclampf(float v, float a, float b) { return v < a ? a : v > b ? b : v; }
 
+void fb_clip_set(fb_t *f, int x, int y, int w, int h) { f->cx0 = x; f->cy0 = y; f->cx1 = x + w; f->cy1 = y + h; f->clip = 1; }
+void fb_clip_clear(fb_t *f) { f->clip = 0; }
+
 void fb_blend(fb_t *f, int x, int y, u32 c)
 {
     if (x < 0 || y < 0 || x >= f->w || y >= f->h) return;
+    if (f->clip && (x < f->cx0 || x >= f->cx1 || y < f->cy0 || y >= f->cy1)) return;
     u32 a = c >> 24; u32 *p = &f->px[y * f->w + x];
     if (a == 0) return;
     if (a >= 255) { *p = c | 0xFF000000u; return; }

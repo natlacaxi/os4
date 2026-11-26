@@ -2,9 +2,11 @@
 #define GFX_H
 /* Bibliotheque graphique portable (noyau Linux userspace, Android JNI, hote) : pixels 0xAARRGGBB, stride = w. Necessite malloc. */
 typedef unsigned int u32;
-typedef struct { u32 *px; int w, h; } fb_t;
+typedef struct { u32 *px; int w, h; int cx0, cy0, cx1, cy1, clip; } fb_t;   /* clip : dessin limite au rectangle [cx0,cx1)x[cy0,cy1) */
 #define ARGB(a, r, g, b) (((u32)(a) << 24) | ((u32)(r) << 16) | ((u32)(g) << 8) | (u32)(b))
 
+void fb_clip_set(fb_t *f, int x, int y, int w, int h);
+void fb_clip_clear(fb_t *f);
 void fb_blend(fb_t *f, int x, int y, u32 c);
 void fb_fill(fb_t *f, int x, int y, int w, int h, u32 c);
 void fb_rrect(fb_t *f, int x, int y, int w, int h, int r, u32 c);

@@ -27,3 +27,5 @@
 - Cache du fond et ombres allégées pour rester fluide sur téléphone.
 
 - Launcher Android : les icônes ouvrent les vraies applications (téléphone, messages, navigateur, appareil photo, réglages…) ; Calc et Notes restent dans TALCO.
+
+- Launcher Android : Fichiers (volumes interne/SD, tri nom/taille/date/type, défilement, renommer/copier/déplacer/supprimer, nouveau dossier) et Réglages (état de l'appareil, SIM, volume, raccourcis système).
